@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Test – Čeština (V bance, Na poště, U lékaře)</title>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+        background:#f5f5f7;
+        margin:0;
+        padding:0;
+        color:#1a1a1a;
+        line-height:1.4;
+        display:flex;
+        justify-content:center;
+    }
+    .container {
+        width:100%;
+        max-width:700px;
+        background:#fff;
+        box-shadow:0 20px 60px rgba(0,0,0,0.08);
+        border-radius:16px;
+        padding:24px 20px 140px;
+        margin:24px;
+        box-sizing:border-box;
+        position:relative;
+    }
+    h1 {
+        font-size:1.2rem;
+        font-weight:600;
+        margin:0 0 8px;
+        color:#000;
+        text-align:center;
+    }
+    .sub {
+        font-size:0.9rem;
+        color:#555;
+        text-align:center;
+        margin-bottom:16px;
+    }
+
+    .student-block{
+        background:#fff;
+        border:1px solid #e5e5e5;
+        border-radius:12px;
+        padding:16px;
+        margin-bottom:24px;
+    }
+    .student-label{
+        font-size:0.8rem;
+        font-weight:600;
+        color:#000;
+        margin-bottom:8px;
+        display:block;
+    }
+    .student-input{
+        width:100%;
+        font-size:1rem;
+        padding:10px 12px;
+        border-radius:8px;
+        border:1px solid #cfcfcf;
+        background:#fafafa;
+        outline:none;
+    }
+
+    .question-block {
+        background:#fafafa;
+        border:1px solid #e5e5e5;
+        border-radius:12px;
+        padding:16px 16px 12px;
+        margin-bottom:16px;
+    }
+    .q-header {
+        font-weight:600;
+        font-size:0.95rem;
+        margin-bottom:12px;
+        color:#000;
+        display:flex;
+        flex-wrap:wrap;
+        gap:6px;
+    }
+    .q-num {
+        background:#000;
+        color:#fff;
+        font-size:0.7rem;
+        font-weight:600;
+        line-height:1;
+        padding:4px 8px;
+        border-radius:6px;
+    }
+    .q-text {
+        flex:1;
+        min-width:200px;
+    }
+    .answers {
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+        font-size:0.9rem;
+    }
+    label.answer-option {
+        display:flex;
+        align-items:flex-start;
+        gap:8px;
+        background:#fff;
+        border:1px solid #dcdcdc;
+        border-radius:8px;
+        padding:10px 12px;
+    }
+    label.answer-option input[type="radio"] {
+        margin-top:3px;
+        min-width:16px;
+    }
+
+    .footer-bar {
+        position:fixed;
+        left:0;
+        right:0;
+        bottom:0;
+        background:#fff;
+        border-top:1px solid #e5e5e5;
+        box-shadow:0 -10px 40px rgba(0,0,0,0.08);
+        padding:16px 20px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:10px;
+    }
+    button#checkBtn, button#downloadBtn {
+        appearance:none;
+        border:none;
+        border-radius:10px;
+        background:#000;
+        color:#fff;
+        font-size:1rem;
+        line-height:1.2;
+        font-weight:600;
+        padding:12px 20px;
+        width:100%;
+        max-width:320px;
+    }
+    button#downloadBtn {
+        display:none;
+    }
+
+    #resultBox {
+        font-size:0.95rem;
+        font-weight:600;
+        color:#000;
+        min-height:1.2em;
+        text-align:center;
+    }
+    .note {
+        font-size:0.7rem;
+        color:#777;
+        text-align:center;
+        line-height:1.2;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Test – Čeština (V bance, Na poště, U lékaře)</h1>
+    <div class="sub">Vyplň své jméno, odpověz na otázky a klikni na „Zkontrolovat“.</div>
+
+    <!-- Student info -->
+    <div class="student-block">
+        <label for="studentName" class="student-label">Jméno a příjmení (povinné)</label>
+        <input id="studentName" class="student-input" type="text" placeholder="Jméno a příjmení" />
+    </div>
+
+    <form id="quizForm"></form>
+</div>
+
+<div class="footer-bar">
+    <div id="resultBox"></div>
+    <button id="checkBtn" type="button">Zkontrolovat</button>
+    <button id="downloadBtn" type="button">Stáhnout výsledek</button>
+    <div class="note">
+        Výsledek = počet správných odpovědí / 24.<br />
+        Po stažení pošli soubor učiteli.
+    </div>
+</div>
+
+<script>
+// -------------------------------
+// 1) OTÁZKY
+// -------------------------------
+const questionsData = [
+    // --- V bance (10 otázek) ---
+    {
+        text: "„účet“ znamená:",
+        answers: [
+            {text:"běžný účet / bankovní účet", correct:true},
+            {text:"koleno", correct:false},
+            {text:"adresa", correct:false}
+        ]
+    },
+    {
+        text: "„hotovost“ znamená:",
+        answers: [
+            {text:"platba kartou", correct:false},
+            {text:"hotové peníze / cash", correct:true},
+            {text:"podpis", correct:false}
+        ]
+    },
+    {
+        text: "„spořicí účet“ je:",
+        answers: [
+            {text:"účet na spoření peněz", correct:true},
+            {text:"kreditní karta", correct:false},
+            {text:"půjčka", correct:false}
+        ]
+    },
+    {
+        text: "„běžný účet“ je:",
+        answers: [
+            {text:"každodenní (kurentní) účet", correct:true},
+            {text:"spořicí účet", correct:false},
+            {text:"doklad totožnosti", correct:false}
+        ]
+    },
+    {
+        text: "„kreditní karta“ je:",
+        answers: [
+            {text:"karta na úvěr / kredit", correct:true},
+            {text:"debetní karta", correct:false},
+            {text:"razítko", correct:false}
+        ]
+    },
+    {
+        text: "„výběr“ (peněz) znamená:",
+        answers: [
+            {text:"vybrání hotovosti z účtu", correct:true},
+            {text:"vložit peníze na účet", correct:false},
+            {text:"splácet dluh", correct:false}
+        ]
+    },
+    {
+        text: "„vklad“ znamená:",
+        answers: [
+            {text:"vložit peníze na účet", correct:true},
+            {text:"ztratit kartu", correct:false},
+            {text:"zablokovat účet", correct:false}
+        ]
+    },
+    {
+        text: "„směnárna“ je místo, kde:",
+        answers: [
+            {text:"vyměníš měnu (např. euro → koruna)", correct:true},
+            {text:"kupuješ léky", correct:false},
+            {text:"kupuješ poštovní známky", correct:false}
+        ]
+    },
+    {
+        text: "„úrok“ znamená:",
+        answers: [
+            {text:"procento navíc za půjčku nebo na spoření", correct:true},
+            {text:"doručení balíku", correct:false},
+            {text:"pracovní doba", correct:false}
+        ]
+    },
+    {
+        text: "„půjčka“ je:",
+        answers: [
+            {text:"peníze, které si vezmu a musím vrátit", correct:true},
+            {text:"poštovní balík", correct:false},
+            {text:"doklad totožnosti", correct:false}
+        ]
+    },
+
+    // --- Na poště (7 otázek) ---
+    {
+        text: "„pošta“ je:",
+        answers: [
+            {text:"místo, kde posílám dopisy a balíky", correct:true},
+            {text:"lékárna", correct:false},
+            {text:"benzínová pumpa", correct:false}
+        ]
+    },
+    {
+        text: "„doporučený dopis“ znamená:",
+        answers: [
+            {text:"dopis s potvrzením o doručení", correct:true},
+            {text:"reklamní dopis bez adresy", correct:false},
+            {text:"pozdrav kamarádovi na WhatsAppu", correct:false}
+        ]
+    },
+    {
+        text: "„balík“ je:",
+        answers: [
+            {text:"zásilka / krabice s věcmi", correct:true},
+            {text:"pracovní smlouva", correct:false},
+            {text:"platební karta", correct:false}
+        ]
+    },
+    {
+        text: "„poštovní známka“ je:",
+        answers: [
+            {text:"malý papírek na dopis, abych mohl poslat poštou", correct:true},
+            {text:"doklad totožnosti", correct:false},
+            {text:"razítko zaměstnavatele", correct:false}
+        ]
+    },
+    {
+        text: "„odesílatel“ je:",
+        answers: [
+            {text:"ten, kdo posílá balík/dopis", correct:true},
+            {text:"ten, kdo doručuje balík", correct:false},
+            {text:"ten, kdo přijímá balík", correct:false}
+        ]
+    },
+    {
+        text: "„adresát“ je:",
+        answers: [
+            {text:"ten, komu balík/dopis jde", correct:true},
+            {text:"poštovní úřad", correct:false},
+            {text:"kurýr", correct:false}
+        ]
+    },
+    {
+        text: "„poštovní schránka“ je:",
+        answers: [
+            {text:"krabice na ulici, kam dávám dopisy", correct:true},
+            {text:"bankomat", correct:false},
+            {text:"lékárnička", correct:false}
+        ]
+    },
+
+    // --- U lékaře (7 otázek) ---
+    {
+        text: "„čekárna“ je:",
+        answers: [
+            {text:"místnost, kde pacient čeká na doktora", correct:true},
+            {text:"lék, který snižuje horečku", correct:false},
+            {text:"operace srdce", correct:false}
+        ]
+    },
+    {
+        text: "„pojištěnec“ znamená:",
+        answers: [
+            {text:"člověk, který má zdravotní pojištění", correct:true},
+            {text:"doktor-specialista", correct:false},
+            {text:"sestra na recepci", correct:false}
+        ]
+    },
+    {
+        text: "„průkaz pojištěnce“ je:",
+        answers: [
+            {text:"kartička zdravotního pojištění", correct:true},
+            {text:"platební karta do bankomatu", correct:false},
+            {text:"řidičský průkaz", correct:false}
+        ]
+    },
+    {
+        text: "„bolest v krku“ znamená:",
+        answers: [
+            {text:"bolí mě hrdlo", correct:true},
+            {text:"mám rozbitý displej na telefonu", correct:false},
+            {text:"mám rozbitou kartu v bance", correct:false}
+        ]
+    },
+    {
+        text: "„teplota / horečka“ je:",
+        answers: [
+            {text:"zvýšená tělesná teplota", correct:true},
+            {text:"poštovní balík", correct:false},
+            {text:"pracovní doba pojišťovny", correct:false}
+        ]
+    },
+    {
+        text: "„recept“ u doktora je:",
+        answers: [
+            {text:"pap
