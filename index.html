@@ -386,3 +386,44 @@ const questionsData = [
     ]
 }
 ];
+
+function renderQuestions() {
+  const quizForm = document.getElementById("quizForm");
+  quizForm.innerHTML = "";
+  questionsData.forEach((q, idx) => {
+    const div = document.createElement("div");
+    div.className = "question";
+    div.innerHTML = `<p><b>${idx + 1}. ${q.text}</b></p>` +
+      q.answers.map(a => `
+        <label>
+          <input type="radio" name="q${idx}" value="${a.text}">
+          ${a.text}
+        </label><br>
+      `).join("");
+    quizForm.appendChild(div);
+  });
+}
+
+function checkResult() {
+  const studentName = document.getElementById("studentName").value.trim();
+  if (!studentName) {
+    alert("Zadej své jméno a příjmení!");
+    return;
+  }
+
+  let score = 0;
+  questionsData.forEach((q, idx) => {
+    const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+    if (selected && q.answers.find(a => a.text === selected.value && a.correct)) {
+      score++;
+    }
+  });
+
+  alert(`Výsledek: ${score} / ${questionsData.length}`);
+}
+
+renderQuestions();
+document.getElementById("checkBtn").addEventListener("click", checkResult);
+</script>
+</body>
+</html>
