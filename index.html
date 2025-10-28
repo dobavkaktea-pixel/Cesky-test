@@ -185,7 +185,7 @@
 
 <script>
 // -------------------------------
-// 1) OTÁZKY
+// 1) OTÁZKY (24)
 // -------------------------------
 const questionsData = [
     // --- V bance (10 otázek) ---
@@ -356,7 +356,7 @@ const questionsData = [
     {
         text: "„bolest v krku“ znamená:",
         answers: [
-            {text:"bolí mě hrdlo", correct:true},
+            {text:"bolí mé hrdlo", correct:true},
             {text:"mám rozbitý displej na telefonu", correct:false},
             {text:"mám rozbitou kartu v bance", correct:false}
         ]
@@ -370,60 +370,188 @@ const questionsData = [
         ]
     },
     {
-    text: "„recept“ u doktora je:",
-    answers: [
-        {text:"papír / elektronický kód na léky v lékárně", correct:true},
-        {text:"návod na vaření polévky", correct:false},
-        {text:"faktura z banky", correct:false}
-    ]
-},
-{
-    text: "„kontrola u lékaře“ znamená:",
-    answers: [
-        {text:"pravidelná návštěva, aby doktor zkontroloval stav", correct:true},
-        {text:"změna adresy na poště", correct:false},
-        {text:"podpis půjčky v bance", correct:false}
-    ]
-}
+        text: "„recept“ u doktora je:",
+        answers: [
+            {text:"papír / elektronický kód na léky v lékárně", correct:true},
+            {text:"návod na vaření polévky", correct:false},
+            {text:"faktura z banky", correct:false}
+        ]
+    },
+    {
+        text: "„kontrola u lékaře“ znamená:",
+        answers: [
+            {text:"pravidelná návštěva, aby doktor zkontroloval stav", correct:true},
+            {text:"změna adresy na poště", correct:false},
+            {text:"podpis půjčky v bance", correct:false}
+        ]
+    }
 ];
 
-function renderQuestions() {
-  const quizForm = document.getElementById("quizForm");
-  quizForm.innerHTML = "";
-  questionsData.forEach((q, idx) => {
-    const div = document.createElement("div");
-    div.className = "question";
-    div.innerHTML = `<p><b>${idx + 1}. ${q.text}</b></p>` +
-      q.answers.map(a => `
-        <label>
-          <input type="radio" name="q${idx}" value="${a.text}">
-          ${a.text}
-        </label><br>
-      `).join("");
-    quizForm.appendChild(div);
-  });
-}
-
-function checkResult() {
-  const studentName = document.getElementById("studentName").value.trim();
-  if (!studentName) {
-    alert("Zadej své jméno a příjmení!");
-    return;
-  }
-
-  let score = 0;
-  questionsData.forEach((q, idx) => {
-    const selected = document.querySelector(`input[name="q${idx}"]:checked`);
-    if (selected && q.answers.find(a => a.text === selected.value && a.correct)) {
-      score++;
+// -------------------------------
+// Pomocné funkce
+// -------------------------------
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-  });
-
-  alert(`Výsledek: ${score} / ${questionsData.length}`);
 }
 
+// -------------------------------
+// Генерация вопросов на страницу
+// -------------------------------
+const formEl = document.getElementById("quizForm");
+const renderedQuestions = []; 
+// каждый элемент: {name, correctValue, getChosenText()}
+
+function renderQuestions() {
+    questionsData.forEach((q, idx) => {
+        // копия ответов и перемешивание
+        const localAnswers = q.answers.map(a => ({...a}));
+        shuffleArray(localAnswers);
+
+        const qName = "q" + idx;
+        let correctKey = null;
+        const answerTextMap = {};
+
+        // блок вопроса
+        const block = document.createElement("div");
+        block.className = "question-block";
+
+        // шапка вопроса
+        const header = document.createElement("div");
+        header.className = "q-header";
+
+        const num = document.createElement("div");
+        num.className = "q-num";
+        num.textContent = (idx + 1) + "/";
+
+        const text = document.createElement("div");
+        text.className = "q-text";
+        text.textContent = q.text;
+
+        header.appendChild(num);
+        header.appendChild(text);
+
+        // ответы
+        const answersWrap = document.createElement("div");
+        answersWrap.className = "answers";
+
+        localAnswers.forEach((ans, ansIdx) => {
+            const optId = qName + "_opt" + ansIdx;
+            if (ans.correct) {
+                correctKey = optId;
+            }
+
+            const label = document.createElement("label");
+            label.className = "answer-option";
+
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = qName;
+            input.value = optId;
+            input.id = optId;
+
+            const spanText = document.createElement("span");
+            spanText.textContent = ans.text;
+            answerTextMap[optId] = ans.text;
+
+            label.appendChild(input);
+            label.appendChild(spanText);
+            answersWrap.appendChild(label);
+        });
+
+        block.appendChild(header);
+        block.appendChild(answersWrap);
+        formEl.appendChild(block);
+
+        renderedQuestions.push({
+            name: qName,
+            correctValue: correctKey,
+            getChosenText: () => {
+                const chosen = document.querySelector(`input[name="${qName}"]:checked`);
+                if (!chosen) return "";
+                return answerTextMap[chosen.value] || "";
+            }
+        });
+    });
+}
+
+// -------------------------------
+// Проверка результата
+// -------------------------------
+function checkResult() {
+    const studentName = document.getElementById("studentName").value.trim();
+    if (!studentName) {
+        alert("Zadej své jméno a příjmení.");
+        return;
+    }
+
+    let score = 0;
+    renderedQuestions.forEach(qInfo => {
+        const chosen = document.querySelector(`input[name="${qInfo.name}"]:checked`);
+        if (chosen && chosen.value === qInfo.correctValue) {
+            score += 1;
+        }
+    });
+
+    // показать результат внизу и включить кнопку скачивания
+    const resultBox = document.getElementById("resultBox");
+    resultBox.textContent = "Výsledek: " + score + " / " + renderedQuestions.length;
+
+    const dlBtn = document.getElementById("downloadBtn");
+    dlBtn.style.display = "block";
+    dlBtn.dataset.score = score;
+    dlBtn.dataset.name = studentName;
+}
+
+// -------------------------------
+// Скачивание результата в txt
+// -------------------------------
+function downloadResultTxt() {
+    const btn = document.getElementById("downloadBtn");
+    const studentName = btn.dataset.name || "";
+    const score = btn.dataset.score || "0";
+
+    const now = new Date();
+    const timestamp = now.toLocaleString("cs-CZ", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+
+    let lines = [];
+    lines.push("Jméno a příjmení: " + studentName);
+    lines.push("Datum a čas: " + timestamp);
+    lines.push("Výsledek: " + score + " / " + renderedQuestions.length);
+    lines.push("");
+    lines.push("ODPOVĚDI:");
+    renderedQuestions.forEach((qInfo, idx) => {
+        const chosen = document.querySelector(`input[name="${qInfo.name}"]:checked`);
+        const chosenText = qInfo.getChosenText();
+        lines.push((idx+1) + ". " + (chosenText ? chosenText : "[nevyplněno]"));
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    const safeName = studentName.replace(/\s+/g,"_");
+    a.download = "vysledek_" + safeName + ".txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// -------------------------------
+// Init
+// -------------------------------
 renderQuestions();
 document.getElementById("checkBtn").addEventListener("click", checkResult);
+document.getElementById("downloadBtn").addEventListener("click", downloadResultTxt);
 </script>
 </body>
 </html>
